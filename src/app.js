@@ -5,6 +5,12 @@ import customerRoutes from './routes/customer.routes.js';
 import orderRoutes from './routes/order.routes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
+import { pingDatabase } from './config/database.js';
+
+pingDatabase()
+  .then(() => console.log("Database connected"))
+  .catch(err => console.error("Database connection failed", err));
+
 export const app = express();
 
 // Middleware
