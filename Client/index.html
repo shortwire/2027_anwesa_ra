@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Order Management System</title>
+</head>
+<body>
+    <h1>Order Management System</h1>
+
+    <!-- 1. ITEM MANAGEMENT -->
+    <section>
+        <h2>Item Management</h2>
+        <form id="itemForm">
+            <input type="text" id="itemDesc" placeholder="Item Description" required>
+            <input type="number" id="itemQty" placeholder="Quantity" required>
+            <input type="number" id="itemPrice" placeholder="Price" required>
+            <input type="number" id="itemDiscount" placeholder="Discount %" min="0" max="100" step="0.01" value="0" required>
+            <button type="submit">Create Item</button>
+        </form>
+        <button onclick="loadItems()">Refresh Items</button>
+        <div id="itemList"></div>
+    </section>
+
+    <hr>
+
+    <!-- 2. CUSTOMER MANAGEMENT -->
+    <section>
+        <h2>Customer Management</h2>
+        <form id="customerForm">
+            <input type="text" id="custName" placeholder="Customer Name" required>
+            <button type="submit">Create Customer</button>
+        </form>
+        <button onclick="loadCustomers()">Refresh Customers</button>
+        <div id="customerList"></div>
+    </section>
+
+    <hr>
+
+    <!-- 3. ORDER MANAGEMENT -->
+    <section>
+        <h2>Order Management</h2>
+        <form id="orderForm">
+            <input type="number" id="orderCustId" placeholder="Customer ID" required>
+            <input type="number" id="orderItemId" placeholder="Item ID" required>
+            <input type="number" id="orderQty" placeholder="Quantity" required>
+            <label><input type="checkbox" id="applyDiscount"> Apply Discount</label>
+            <button type="submit">Place Order</button>
+        </form>
+        <button onclick="loadOrders()">Refresh Orders</button>
+        <div id="orderList"></div>
+    </section>
+
+    <script>
+        const API_URL = 'http://localhost:3001/api'; // Assessment2: Points to the separate API server
+
+        // --- API HELPERS ---
+        async function api(path, method = 'GET', body = null) {
+            const options = { 
+                method, 
+                headers: {} 
+            };
+            
+            if (body) {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(body);
+            }
+            
+            const res = await fetch(API_URL + path, options); // Assessment2: Uses absolute URL
+            const data = await res.json();
+            if (!res.ok) alert('Error: ' + (data.message || 'Unknown error'));
+            return data;
+        }
+
+        // --- ITEMS ---
+        document.getElementById('itemForm').onsubmit = async (e) => {
+            e.preventDefault();
+            await api('/items', 'POST', {
+                ItemDesc: document.getElementById('itemDesc').value,
+                Qty: parseInt(document.getElementById('itemQty').value),
+                Price: parseFloat(document.getElementById('itemPrice').value),
+                discountPercentage: parseFloat(document.getElementById('itemDiscount').value)
+            });
+            // Reset the form
+            document.getElementById('itemForm').reset();
+            document.getElementById('itemDiscount').value = '0';
+            loadItems();
+        };
+
+        async function loadItems() {
+            const items = await api('/items');
+            if (!Array.isArray(items)) {
+                document.getElementById('itemList').innerHTML = '<p>Error loading items</p>';
+                return;
+            }
+            
+            // Fetch discounts for all items
+            let discounts = {};
+            try {
+                const discountList = await api('/items/discounts/all');
+                if (Array.isArray(discountList)) {
+                    discountList.forEach(d => {
+                        discounts[d.ItemID] = d.DiscountPercentage;
+                    });
+                }
+            } catch (err) {
+                console.log('Could not fetch discounts, showing items without discount info');
+            }
+            
+            document.getElementById('itemList').innerHTML = items.map(i => {
+                const priceValue = parseFloat(i.Price ?? i.price ?? 0);
+                const price = isNaN(priceValue) ? 0 : priceValue;
+                const discount = discounts[i.ItemID] ?? 0;
+                return `<p>ID: ${i.ItemID} | ${i.ItemDesc} | Stock: ${i.Qty} | Price: $${price.toFixed(2)} | Discount: ${discount}% 
+                         <button onclick="deleteItem(${i.ItemID})">Delete</button>
+                     </p>`;
+            }).join('');
+        }
+
+        async function deleteItem(id) {
+            if (confirm('Are you sure you want to delete this item?')) {
+                await api('/items/' + id, 'DELETE');
+                loadItems();
+            }
+        }
+
+        // --- CUSTOMERS ---
+        document.getElementById('customerForm').onsubmit = async (e) => {
+            e.preventDefault();
+            await api('/customers', 'POST', {
+                CustomerName: document.getElementById('custName').value
+            });
+            loadCustomers();
+        };
+
+        async function loadCustomers() {
+            const customers = await api('/customers');
+            document.getElementById('customerList').innerHTML = customers.map(c => `
+                <p>ID: ${c.CustomerID} | Name: ${c.CustomerName} | Priority: ${c.Priority}
+                   <button onclick="deleteCustomer(${c.CustomerID})">Delete</button>
+                </p>`).join('');
+        }
+
+        async function deleteCustomer(id) {
+            await api('/customers/' + id, 'DELETE');
+            loadCustomers();
+        }
+
+        // --- ORDERS ---
+        document.getElementById('orderForm').onsubmit = async (e) => {
+            e.preventDefault();
+            await api('/orders', 'POST', {
+                CustomerID: parseInt(document.getElementById('orderCustId').value),
+                ItemID: parseInt(document.getElementById('orderItemId').value),
+                Qty: parseInt(document.getElementById('orderQty').value),
+                ApplyDiscount: document.getElementById('applyDiscount').checked
+            });
+            loadOrders();
+            loadItems(); // Update stock view
+        };
+
+        async function loadOrders() {
+            const orders = await api('/orders');
+            if (!Array.isArray(orders)) {
+                document.getElementById('orderList').innerHTML = '<p>Error loading orders</p>';
+                return;
+            }
+            document.getElementById('orderList').innerHTML = orders.map(o => {
+                const price = parseFloat(o.Price ?? o.price ?? 0) || 0;
+                const subtotal = parseFloat((price * o.Qty).toFixed(2));
+                const total = parseFloat(o.totalprice || 0);
+                const discountApplied = subtotal > 0 && subtotal > total;
+                const discountPercent = discountApplied ? Math.round(((subtotal - total) / subtotal) * 100) : 0;
+                return `\n<p>Order #${o.OrderID} | Cust: ${o.CustomerName} | Item: ${o.ItemDesc} | \n                   Qty: ${o.Qty} ${discountApplied ? ` | Discount: ${discountPercent}%` : ''} | <b>Total: $${total}</b>\n <button onclick="deleteOrder(${o.OrderID})">Cancel</button>\n </p>`;
+            }).join('');
+        }
+
+        async function deleteOrder(id) {
+            await api('/orders/' + id, 'DELETE');
+            loadOrders();
+            loadItems();
+            loadCustomers();
+        }
+
+        // Initial Load
+        loadItems();
+        loadCustomers();
+        loadOrders();
+    </script>
+</body>
+</html>
+
+

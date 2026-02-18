@@ -1,0 +1,90 @@
+CREATE TABLE `Item` (
+  `ItemID` bigint NOT NULL AUTO_INCREMENT,
+  `ItemDesc` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `Qty` int DEFAULT NULL,
+  PRIMARY KEY (`ItemID`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+CREATE TABLE `Customer` (
+  `CustomerID` bigint NOT NULL AUTO_INCREMENT,
+  `CustomerName` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `Priority` tinyint(1) DEFAULT NULL,
+  PRIMARY KEY (`CustomerID`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+CREATE TABLE `Order` (
+  `OrderID` bigint NOT NULL AUTO_INCREMENT,
+  `CustomerID` bigint NOT NULL,
+  `ItemID` bigint NOT NULL,
+  `Qty` int NOT NULL,
+  PRIMARY KEY (`OrderID`),
+  KEY `fk_customer_cust_id` (`CustomerID`),
+  KEY `fk_item_item_id` (`ItemID`),
+  CONSTRAINT `fk_customer_cust_id` FOREIGN KEY (`CustomerID`) REFERENCES `Customer` (`CustomerID`),
+  CONSTRAINT `fk_item_item_id` FOREIGN KEY (`ItemID`) REFERENCES `Item` (`ItemID`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+
+
+Scenario 1: Setup & Initial Stock
+First, let's create a warehouse of items and a customer.
+
+Create "Processor" (Stock: 10)
+POST http://localhost:3000/api/items
+{"ItemDesc": "Intel i9", "Qty": 10}
+Create "RAM" (Stock: 20)
+POST http://localhost:3000/api/items
+{"ItemDesc": "16GB RAM", "Qty": 20}
+Create Customer
+POST http://localhost:3000/api/customers
+{"CustomerName": "TechBuilder"}
+Scenario 2: Successful Order & Stock Check
+Let's see if buying items actually reduces stock.
+
+Order 4 Processors
+POST http://localhost:3000/api/orders
+{"CustomerID": 1, "ItemID": 1, "Qty": 4}
+Check Stock
+GET http://localhost:3000/api/items/1
+Verification: The Qty should now be 6 (10 - 4).
+Scenario 3: Stock Protection (The Error Case)
+What if we try to buy more than what is left?
+
+Order 10 Processors (Only 6 left)
+POST http://localhost:3000/api/orders
+{"CustomerID": 1, "ItemID": 1, "Qty": 10}
+Verification: You should receive a 400 Error: "Insufficient stock. Available: 6".
+Scenario 4: Updating Order Quantity
+We already have an order for 4 processors. Let's change it to 7.
+
+Increase Order to 7
+PUT http://localhost:3000/api/orders/1
+{"CustomerID": 1, "ItemID": 1, "Qty": 7}
+Verify New Stock
+GET http://localhost:3000/api/items/1
+Verification: Stock should be 3 (Started at 10, now order is for 7, so 10 - 7 = 3).
+Scenario 5: Changing the Item (Item Swap)
+The most complex logic: Alice decides she doesn't want Processors and wants RAM instead.
+
+Swap Order 1 from Item 1 (Processor) to Item 2 (RAM)
+PUT http://localhost:3000/api/orders/1
+{"CustomerID": 1, "ItemID": 2, "Qty": 5}
+Verify Inventory Swap
+GET http://localhost:3000/api/items/1 (Processor) -> Should be 10 again (Order was deleted/swapped, stock returned).
+GET http://localhost:3000/api/items/2 (RAM) -> Should be 15 (20 original - 5 ordered).
+Scenario 6: Priority & Deletion Restoration
+Testing the VIP status and final stock return.
+
+Create 3 more Small Orders (Repeat 3 times)
+POST http://localhost:3000/api/orders
+{"CustomerID": 1, "ItemID": 2, "Qty": 1}
+Check VIP Status
+GET http://localhost:3000/api/customers/1
+Verification: Priority should be 1 (Because total orders = 4).
+Cancel (Delete) the Main Order
+DELETE http://localhost:3000/api/orders/1
+Final Check
+Stock Check: RAM stock should increase back by 5.
+Status Check: Customer Priority should drop to 0 (Because total orders fell to 3).
+
+
+

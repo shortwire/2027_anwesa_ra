@@ -1,0 +1,346 @@
+{
+  "info": {
+    "name": "REST Assignment API - Price & Discount System",
+    "description": "API endpoints for the price and discount management system",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Items",
+      "item": [
+        {
+          "name": "Create Item with Price",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itemDesc\": \"Laptop\",\n  \"qty\": 10,\n  \"price\": 100000.00\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/items",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "items"]
+            }
+          }
+        },
+        {
+          "name": "Get All Items",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/api/items",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "items"]
+            }
+          }
+        },
+        {
+          "name": "Update Item Price",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"itemDesc\": \"Laptop Pro\",\n  \"qty\": 8,\n  \"price\": 120000.00\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/items/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "items", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Discounts",
+      "item": [
+        {
+          "name": "Create Holiday Discount",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"holidayName\": \"Diwali Sale\",\n  \"startDate\": \"2025-10-20\",\n  \"endDate\": \"2025-11-10\",\n  \"itemId\": 1,\n  \"discountPercentage\": 15.00\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/discount",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "discount"]
+            }
+          }
+        },
+        {
+          "name": "Create New Year Sale",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"holidayName\": \"New Year Sale\",\n  \"startDate\": \"2026-01-01\",\n  \"endDate\": \"2026-01-15\",\n  \"itemId\": 2,\n  \"discountPercentage\": 12.00\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/discount",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "discount"]
+            }
+          }
+        },
+        {
+          "name": "Get Item Holiday Info",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/api/discount/item/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "discount", "item", "1"]
+            }
+          }
+        },
+        {
+          "name": "Get Discount for Today",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/api/discount?itemId=1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "discount"],
+              "query": [
+                {
+                  "key": "itemId",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Discount for Specific Date",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/api/discount?itemId=1&date=2025-10-25",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "discount"],
+              "query": [
+                {
+                  "key": "itemId",
+                  "value": "1"
+                },
+                {
+                  "key": "date",
+                  "value": "2025-10-25"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Deactivate Discount",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "http://localhost:3000/api/discount/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "discount", "1"]
+            }
+          }
+        },
+        {
+          "name": "Calculate Order Total Preview",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\"itemId\": 1, \"qty\": 2, \"price\": 100000.00},\n    {\"itemId\": 2, \"qty\": 1, \"price\": 50000.00}\n  ]\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/discount/calculate-total",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "discount", "calculate-total"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customers",
+      "item": [
+        {
+          "name": "Create Customer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"customerName\": \"John Doe\"\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/customers",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "customers"]
+            }
+          }
+        },
+        {
+          "name": "Get All Customers",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/api/customers",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "customers"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "item": [
+        {
+          "name": "Create Order (Discount Auto-Applied)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"CustomerID\": 1,\n  \"ItemID\": 1,\n  \"Qty\": 2\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/orders",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "orders"]
+            }
+          }
+        },
+        {
+          "name": "Get All Orders",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/api/orders",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "orders"]
+            }
+          }
+        },
+        {
+          "name": "Get Order Details",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "http://localhost:3000/api/orders/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "orders", "1"]
+            }
+          }
+        },
+        {
+          "name": "Update Order",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"CustomerID\": 1,\n  \"ItemID\": 1,\n  \"Qty\": 3\n}"
+            },
+            "url": {
+              "raw": "http://localhost:3000/api/orders/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "orders", "1"]
+            }
+          }
+        },
+        {
+          "name": "Delete Order",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "http://localhost:3000/api/orders/1",
+              "protocol": "http",
+              "host": ["localhost"],
+              "port": "3000",
+              "path": ["api", "orders", "1"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
